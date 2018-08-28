@@ -1,0 +1,9 @@
+/.settings/
+/.project
+/.includepath
+/blib/
+/MYMETA.json
+/MYMETA.yml
+/Makefile
+/pm_to_blib
+/cover_db/
