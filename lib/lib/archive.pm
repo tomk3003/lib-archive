@@ -38,23 +38,24 @@ or
 =head1 DESCRIPTION
 
 Specify TAR archives to directly load modules from. The TAR files will be
-searched like include dirs. Globs are expanded, so you can use wildcards. If
-modules are present in more than one TAR archive, the first one will
-be used.
+searched like include dirs. Globs are expanded, so you can use wildcards
+(not for URLs). If modules are present in more than one TAR archive, the
+first one will be used.
 
 B<The module will not create any files, not even temporary. Everything is
 extracted on the fly>.
 
 You can use every file format Archive::Tar supports.
 
-If the archive is a gzipped TAR archive with the extension '.tar.gz' and the
-filename without suffix matches the toplevel directory of the archive,
-modules will only be loaded from the subdirectory 'lib' of this toplevel
-directory of the archive. This means that e.g. for 'JSON-PP-2.97001.tar.gz'
-only the modules under 'JSON-PP-2.97001/lib' will be loaded.
+If the archive contains a toplevel directory 'lib' the module search path
+will start there. Otherwise it will start from the root of the archive.
 
-For all other archives the modules will be loaded from the directory 'lib/' or
-if that is missing from the root of the archive.
+If the archive is a gzipped TAR archive with the extension '.tar.gz' and the
+archive contains a toplevel directory matching the archive name without the
+extension the module search path starts with this directory. The above
+rule for the subdirectory 'lib' applies from there. This means that e.g. for
+'JSON-PP-2.97001.tar.gz' the modules will only be included from
+'JSON-PP-2.97001/lib'.
 
 You can use URLs for loading modules directly from CPAN. Either specify the
 complete URL like:
@@ -65,9 +66,9 @@ or use a shortcut like:
 
   use lib::archive 'CPAN://JSON-PP-2.97001.tar.gz';
 
-which will do exactly the same thing (in most cases; there seem to be modules
-without an entry under 'modules/by-module/<toplevel>'; in that case you have
-to use an URL pointing to the file under 'authors/id').
+which will do exactly the same thing (at least in most cases: there seem to
+be modules without an entry under 'modules/by-module/<toplevel>'; in that
+case you have to use an URL pointing to the file under 'authors/id').
 
 If the environment variable CPAN_MIRROR is set, it will be used instead of
 'https://www.cpan.org'.
@@ -115,9 +116,12 @@ sub import {
                 $tmp{$rel}{$full} = $f->get_content_by_ref;
             }
             for my $rel ( keys %tmp ) {
-                my $full = $lib
-                         ? ( $mod ? "$arc->[1]/lib/$rel" : "lib/$rel")
-                         : $rel;
+                my @parts = (
+                    $mod ? $arc->[1] : (),
+                    $lib ? 'lib'     : (),
+                    $rel
+                );
+                my $full = join('/', @parts);
                 $cache{$rel} //= {
                     path    => ref($arc->[0]) ? $entry : $arc->[0],
                     content => $tmp{$rel}{$full},

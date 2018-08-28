@@ -15,15 +15,15 @@ SKIP: {
     skip "cannot accesss CPAN" unless $cpan_ok;
 
     use_ok('lib::archive', qw(
-        CPAN://PPI-Transform-Doxygen-0.32.tar.gz
+        CPAN://Callback-1.07.tar.gz
         https://www.cpan.org/authors/id/T/TO/TOMK/Array-DeepUtils-0.2.tar.gz
     ));
 
-    use_ok('PPI::Transform::Doxygen') ;
+    use_ok('Callback') ;
     is(
-        version->parse($PPI::Transform::Doxygen::VERSION),
-        version->parse(0.32),
-        'PPI::Transform::Doxygen version'
+        version->parse($Callback::VERSION),
+        version->parse(1.07),
+        'Callback version'
     );
 
     use_ok('Array::DeepUtils');
