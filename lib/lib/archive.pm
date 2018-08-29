@@ -10,7 +10,7 @@ use Archive::Tar;
 use Cwd qw(abs_path);
 use File::Basename qw(fileparse);
 
-our $VERSION = "0.1";
+our $VERSION = "0.2";
 
 =pod
 
@@ -21,7 +21,7 @@ lib::archive - load pure-Perl modules directly from TAR archives
 =head1 SYNOPSIS
 
   use FindBin qw($Bin);
-  use lib::archive qw("$Bin/external/*.tgz", "$Bin/extra.tar");
+  use lib::archive ("$Bin/external/*.tgz", "$Bin/extra.tar");
 
   use MyModule; # the given tar archives will be searched first
 

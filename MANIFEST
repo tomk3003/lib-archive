@@ -7,3 +7,7 @@ lib/lib/archive.pm
 t/01_basic.t
 t/02_file.t
 t/03_url.t
+t/arclib/vmod.tgz
+t/arclib/vmod2.tgz
+t/arclib/vmod3.tgz
+t/arclib/vmod4-7.0.tar.gz
