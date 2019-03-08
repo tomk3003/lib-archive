@@ -10,7 +10,7 @@ use Archive::Tar;
 use Cwd qw(abs_path);
 use File::Basename qw(fileparse);
 
-our $VERSION = "0.3";
+our $VERSION = "0.4";
 
 =pod
 
@@ -100,10 +100,10 @@ sub import {
     my %cache;
 
     for my $entry ( @_ ) {
-        my $arcs = $entry =~ /$is_url/
-                 ? _get_url($entry)
-                 : _get_files($entry);
+        my $is_url = $entry =~ /$is_url/;
+        my $arcs = $is_url ? _get_url($entry) : _get_files($entry);
         for my $arc ( @$arcs ) {
+            my $path = $is_url ? $entry : $arc->[0];
             my %tmp;
             my $mod = 0;
             my $lib = 0;
@@ -116,14 +116,9 @@ sub import {
                 $tmp{$rel}{$full} = $f->get_content_by_ref;
             }
             for my $rel ( keys %tmp ) {
-                my @parts = (
-                    $mod ? $arc->[1] : (),
-                    $lib ? 'lib'     : (),
-                    $rel
-                );
-                my $full = join('/', @parts);
+                my $full = join('/', $mod ? $arc->[1] : (), $lib ? 'lib' : (), $rel);
                 $cache{$rel} //= {
-                    path    => ref($arc->[0]) ? $entry : $arc->[0],
+                    path    => "$path/$full",
                     content => $tmp{$rel}{$full},
                 };
             }
@@ -131,12 +126,8 @@ sub import {
     }
     unshift @INC, sub {
         my($cref, $rel) = @_;
-        my $rec = $cache{$rel} or $cache{"lib/$rel"} or return;
-        my $root = $rec->{path} =~ /$is_url/
-                 ? $rec->{path}
-                 : abs_path($rec->{path});
-        $root =~ s!\\!/!g;
-        $INC{$rel} =  "$root/$rel";
+        return unless my $rec = $cache{$rel};
+        $INC{$rel} = $rec->{path};
         return $rec->{content};
     };
 }
@@ -148,7 +139,8 @@ sub _get_files {
     my @files;
     for my $f ( sort glob($glob_ux) ) {
         my($module, $dirs, $suffix) = fileparse($f, qr/\.tar\.gz/);
-        push @files, [$f, $module];
+        (my $clean = abs_path($f)) =~ s!\\!/!g;
+        push @files, [$clean, $module];
     }
     return \@files;
 }
