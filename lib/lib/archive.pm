@@ -10,7 +10,7 @@ use Archive::Tar;
 use Cwd qw(abs_path);
 use File::Basename qw(fileparse);
 
-our $VERSION = "0.2";
+our $VERSION = "0.3";
 
 =pod
 
