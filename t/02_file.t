@@ -4,12 +4,10 @@ use warnings;
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 
-BEGIN { chdir($Bin) }
-
 use Test::More;
 use version;
 
-use lib::archive "./arclib/*.tgz", "$Bin/arclib/VMod4-7.0.tar.gz";
+use lib::archive "arclib/*.tgz", "./arclib/VMod4-7.0.tar.gz";
 
 use_ok('VMod');
 is( version->parse($VMod::VERSION), version->parse(1.0), 'version ok' );

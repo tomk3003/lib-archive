@@ -42,7 +42,9 @@ searched like include dirs. Globs are expanded, so you can use wildcards
 first one will be used.
 
 Relative paths will be interpreted as relative to the directory the
-calling script or module resides in.
+calling script or module resides in. So don't do a chdir() before using
+lib::archive when you call your script with a relative path and use releative
+paths for lib::archive.
 
 B<The module will not create any files, not even temporary. Everything is
 extracted on the fly>.
@@ -101,11 +103,11 @@ sub import {
     my $class = shift;
     my %cache;
 
-    my $caller_dir = dirname((caller)[1]);
+    (my $acdir = dirname(rel2abs((caller)[1]))) =~ s!\\!/!g;
 
     for my $entry (@_) {
         my $is_url = $entry =~ /$is_url/;
-        my $arcs = $is_url ? _get_url($entry) : _get_files($entry, $caller_dir);
+        my $arcs = $is_url ? _get_url($entry) : _get_files($entry, $acdir);
         for my $arc (@$arcs) {
             my $path = $is_url ? $entry : $arc->[0];
             my %tmp;
@@ -137,14 +139,11 @@ sub import {
 sub _get_files {
     my($glob, $cdir) = @_;
     ( my $glob_ux = $glob ) =~ s!\\!/!g;
+    $glob_ux = "$cdir/$glob_ux" unless file_name_is_absolute($glob_ux);
     my @files;
     for my $f ( sort glob($glob_ux) ) {
         my ( $module, $dirs, $suffix ) = fileparse( $f, qr/\.tar\.gz/ );
-        unless ( file_name_is_absolute($f) ) {
-            $f = "$cdir/$f";
-        }
-        ( my $clean = rel2abs($f) ) =~ s!\\!/!g;
-        push @files, [ $clean, $module ];
+        push @files, [ $f, $module ];
     }
     return \@files;
 }
