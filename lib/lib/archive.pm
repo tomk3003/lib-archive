@@ -43,7 +43,7 @@ first one will be used.
 
 Relative paths will be interpreted as relative to the directory the
 calling script or module resides in. So don't do a chdir() before using
-lib::archive when you call your script with a relative path and use releative
+lib::archive when you call your script with a relative path B<and> use releative
 paths for lib::archive.
 
 B<The module will not create any files, not even temporary. Everything is
@@ -103,11 +103,11 @@ sub import {
     my $class = shift;
     my %cache;
 
-    (my $acdir = dirname(rel2abs((caller)[1]))) =~ s!\\!/!g;
+    ( my $acdir = dirname( rel2abs( (caller)[1] ) ) ) =~ s!\\!/!g;
 
     for my $entry (@_) {
         my $is_url = $entry =~ /$is_url/;
-        my $arcs = $is_url ? _get_url($entry) : _get_files($entry, $acdir);
+        my $arcs = $is_url ? _get_url($entry) : _get_files( $entry, $acdir );
         for my $arc (@$arcs) {
             my $path = $is_url ? $entry : $arc->[0];
             my %tmp;
@@ -137,7 +137,7 @@ sub import {
 
 
 sub _get_files {
-    my($glob, $cdir) = @_;
+    my ( $glob, $cdir ) = @_;
     ( my $glob_ux = $glob ) =~ s!\\!/!g;
     $glob_ux = "$cdir/$glob_ux" unless file_name_is_absolute($glob_ux);
     my @files;
