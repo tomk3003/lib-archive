@@ -13,12 +13,13 @@
     <option name="nonInteractiveModeEnabled" value="false" />
     <option name="passParentEnvs" value="true" />
     <option name="perlParameters" value="" />
-    <option name="programParameters" value="-m -v" />
+    <option name="programParameters" value="-Ilib" />
     <option name="scriptCharset" value="utf8" />
     <option name="scriptPath" value="$PROJECT_DIR$/t" />
-    <option name="startMode" value="RUN" />
+    <option name="startMode" value="BREAKPOINT" />
     <option name="useAlternativeSdk" value="false" />
     <option name="workingDirectory" value="" />
+    <JOBS_NUMBER>1</JOBS_NUMBER>
     <method v="2" />
   </configuration>
 </component>
