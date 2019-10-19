@@ -131,7 +131,8 @@ sub import {
         my ( $cref, $rel ) = @_;
         return unless my $rec = $cache{$rel};
         $INC{$rel} = $rec->{path};
-        return $rec->{content};
+        open(my $fh, '<', $rec->{content});
+        return $fh;
     };
 }
 
