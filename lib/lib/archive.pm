@@ -7,10 +7,11 @@ use 5.010001;
 
 use Carp qw(croak);
 use Archive::Tar;
-use File::Spec::Functions qw(file_name_is_absolute rel2abs);
+use File::Spec::Functions qw(file_name_is_absolute rel2abs tmpdir);
 use File::Basename qw(dirname fileparse);
+use File::Path qw(make_path);
 
-our $VERSION = "0.7";
+our $VERSION = "0.8";
 
 =pod
 
@@ -95,19 +96,24 @@ Thomas Kratz E<lt>tomk@cpan.orgE<gt>
 
 =cut
 
-my $cpan   = $ENV{CPAN_MIRROR} || 'https://www.cpan.org';
-my $is_url = qr!^(?:CPAN|https?)://!;
-my $tar    = Archive::Tar->new();
+my $cpan     = $ENV{CPAN_MIRROR} || 'https://www.cpan.org';
+my $is_url   = qr!^(?:CPAN|https?)://!;
+my $tar      = Archive::Tar->new();
+my $under_db = defined($DB::single) && ( ref( *DB::DB_profiler{CODE} ) ne 'CODE' );
+my $tmpdir   = tmpdir;
 
 sub import {
     my $class = shift;
     my %cache;
 
-    ( my $acdir = dirname( rel2abs( (caller)[1] ) ) ) =~ s!\\!/!g;
+    my $caller_file = (caller)[1];
 
     for my $entry (@_) {
         my $is_url = $entry =~ /$is_url/;
-        my $arcs = $is_url ? _get_url($entry) : _get_files( $entry, $acdir );
+        my $arcs
+            = $is_url                  ? _get_url($entry)
+            : ( $entry eq '__DATA__' ) ? _get_data($caller_file)
+            :                            _get_files( $entry, $caller_file );
         for my $arc (@$arcs) {
             my $path = $is_url ? $entry : $arc->[0];
             my %tmp;
@@ -130,16 +136,17 @@ sub import {
     unshift @INC, sub {
         my ( $cref, $rel ) = @_;
         return unless my $rec = $cache{$rel};
-        $INC{$rel} = $rec->{path};
-        open(my $fh, '<', $rec->{content});
-        return $fh;
+        $INC{$rel} = $under_db ? _save_tmp( $rel, $rec->{content} ) : $rec->{path};
+        open( my $pfh, '<', $rec->{content} );
+        return $pfh;
     };
 }
 
 
 sub _get_files {
-    my ( $glob, $cdir ) = @_;
-    ( my $glob_ux = $glob ) =~ s!\\!/!g;
+    my ( $glob, $cfile ) = @_;
+    ( my $glob_ux = $glob )                      =~ s!\\!/!g;
+    ( my $cdir    = dirname( rel2abs($cfile) ) ) =~ s!\\!/!g;
     $glob_ux = "$cdir/$glob_ux" unless file_name_is_absolute($glob_ux);
     my @files;
     for my $f ( sort glob($glob_ux) ) {
@@ -154,7 +161,7 @@ sub _get_url {
     my ($url) = @_;
 
     my ($module) = $url =~ m!/([^/]+)\.tar\.gz$!;
-    my ($top) = split( /-/, $module );
+    my ($top)    = split( /-/, $module );
 
     $url =~ s!^CPAN://!$cpan/modules/by-module/$top/!;
 
@@ -172,6 +179,40 @@ sub _get_url {
         croak "GET '$url' failed with status:", $rp->{status};
     }
     return \@zips;
+}
+
+
+sub _get_data {
+    my ($cfn) = @_;
+    open( my $fh, '<', $cfn ) or croak "couldn't open $cfn, $!";
+    my $data = join '', <$fh>;
+    $data =~ s/^.*\n__DATA__\r?\n/\n/s;
+    my @data = split( /\n\n+/, $data );
+    my @tars;
+    require MIME::Base64;
+    for my $d (@data) {
+        my $content = MIME::Base64::decode_base64($d);
+        require IO::Uncompress::Gunzip;
+        my $z = eval { IO::Uncompress::Gunzip->new( \$content ) };
+        if ($z) {
+            push @tars, [ $z, '' ];
+            next;
+        }
+        open( my $cfh, '<', \$content );
+        push @tars, [ $cfh, '' ];
+    }
+    return \@tars;
+}
+
+
+sub _save_tmp {
+    my ( $rel, $cref ) = @_;
+    my $fn = $ENV{PERL_LIB_ARCHIVE} ? $ENV{PERL_LIB_ARCHIVE} / $rel : "$tmpdir/perl-lib-archive/$rel";
+    make_path( dirname($fn) );
+    open( my $fh, '>', $fn ) or die "couldn't save $fn, $!";
+    print $fh $$cref;
+    close($fh);
+    return $fn;
 }
 
 
