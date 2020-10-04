@@ -7,9 +7,11 @@ use 5.010001;
 
 use Carp qw(croak);
 use Archive::Tar;
-use File::Spec::Functions qw(file_name_is_absolute rel2abs tmpdir);
+use File::Spec::Functions qw(file_name_is_absolute rel2abs);
 use File::Basename qw(dirname fileparse);
-use File::Path qw(make_path);
+use MIME::Base64 qw(decode_base64);
+use IO::Uncompress::Gunzip;
+use HTTP::Tiny;
 
 our $VERSION = "0.8";
 
@@ -35,6 +37,14 @@ or
   use JSON::PP;
   use YAML::PP;
 
+or
+
+  use lib::archive '__DATA__';
+
+  __DATA__
+  <followed by base64 encoded tar or tgz blocks separated by an empty line>
+
+
 =head1 DESCRIPTION
 
 Specify TAR archives to directly load modules from. The TAR files will be
@@ -47,8 +57,8 @@ calling script or module resides in. So don't do a chdir() before using
 lib::archive when you call your script with a relative path B<and> use releative
 paths for lib::archive.
 
-B<The module will not create any files, not even temporary. Everything is
-extracted on the fly>.
+B<The module will not create any files, not even temporary.
+Everything is extracted on the fly>.
 
 You can use every file format Archive::Tar supports.
 
@@ -96,20 +106,19 @@ Thomas Kratz E<lt>tomk@cpan.orgE<gt>
 
 =cut
 
-my $cpan     = $ENV{CPAN_MIRROR} || 'https://www.cpan.org';
-my $is_url   = qr!^(?:CPAN|https?)://!;
-my $tar      = Archive::Tar->new();
-my $under_db = defined($DB::single) && ( ref( *DB::DB_profiler{CODE} ) ne 'CODE' );
-my $tmpdir   = tmpdir;
+my $cpan   = $ENV{CPAN_MIRROR} || 'https://www.cpan.org';
+my $rx_url = qr!^(?:CPAN|https?)://!;
+my $tar    = Archive::Tar->new();
+
 
 sub import {
-    my $class = shift;
+    my ( $class, @entries ) = @_;
     my %cache;
 
     my $caller_file = (caller)[1];
 
-    for my $entry (@_) {
-        my $is_url = $entry =~ /$is_url/;
+    for my $entry (@entries) {
+        my $is_url = $entry =~ /$rx_url/;
         my $arcs
             = $is_url                  ? _get_url($entry)
             : ( $entry eq '__DATA__' ) ? _get_data($caller_file)
@@ -133,13 +142,16 @@ sub import {
             }
         }
     }
+
     unshift @INC, sub {
         my ( $cref, $rel ) = @_;
         return unless my $rec = $cache{$rel};
-        $INC{$rel} = $under_db ? _save_tmp( $rel, $rec->{content} ) : $rec->{path};
-        open( my $pfh, '<', $rec->{content} );
+        $INC{$rel} = $rec->{path} unless defined($DB::single);    ## no critic (RequireLocalizedPunctuationVars)
+        open( my $pfh, '<', $rec->{content} ) or croak $!;        ## no critic (RequireBriefOpen)
         return $pfh;
     };
+
+    return;
 }
 
 
@@ -165,9 +177,6 @@ sub _get_url {
 
     $url =~ s!^CPAN://!$cpan/modules/by-module/$top/!;
 
-    require HTTP::Tiny;
-    require IO::Uncompress::Gunzip;
-
     my $rp = HTTP::Tiny->new->get($url);
 
     my @zips;
@@ -185,34 +194,24 @@ sub _get_url {
 sub _get_data {
     my ($cfn) = @_;
     open( my $fh, '<', $cfn ) or croak "couldn't open $cfn, $!";
-    my $data = join '', <$fh>;
+    local $/ = undef;
+    my $data = <$fh>;
+    close($fh);
     $data =~ s/^.*\n__DATA__\r?\n/\n/s;
     my @data = split( /\n\n+/, $data );
     my @tars;
-    require MIME::Base64;
+
     for my $d (@data) {
-        my $content = MIME::Base64::decode_base64($d);
-        require IO::Uncompress::Gunzip;
+        my $content = decode_base64($d);
         my $z = eval { IO::Uncompress::Gunzip->new( \$content ) };
         if ($z) {
             push @tars, [ $z, '' ];
             next;
         }
-        open( my $cfh, '<', \$content );
+        open( my $cfh, '<', \$content ) or croak $!;    ## no critic (RequireBriefOpen)
         push @tars, [ $cfh, '' ];
     }
     return \@tars;
-}
-
-
-sub _save_tmp {
-    my ( $rel, $cref ) = @_;
-    my $fn = $ENV{PERL_LIB_ARCHIVE} ? $ENV{PERL_LIB_ARCHIVE} / $rel : "$tmpdir/perl-lib-archive/$rel";
-    make_path( dirname($fn) );
-    open( my $fh, '>', $fn ) or die "couldn't save $fn, $!";
-    print $fh $$cref;
-    close($fh);
-    return $fn;
 }
 
 

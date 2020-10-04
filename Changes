@@ -1,6 +1,6 @@
 0.8 2020-10-03
   - add loading from DATA section
-  - fix running under debugger by creating temp files
+  - fix running under debugger
 
 0.7 2019-10-21
   - fix tests for perls < 5.20
