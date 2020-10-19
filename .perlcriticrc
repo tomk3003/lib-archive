@@ -22,7 +22,7 @@ program-extensions = .pl .t
 [Subroutines::ProhibitSubroutinePrototypes]
     severity = 1
 [Variables::RequireLocalizedPunctuationVars]
-allow = @ARGV $ARGV %ENV %SIG
+allow = @ARGV $ARGV %ENV %SIG %DB
 [Subroutines::ProhibitManyArgs]
 max_arguments = 6
 [Modules::RequireExplicitPackage]
