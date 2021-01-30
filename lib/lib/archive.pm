@@ -14,7 +14,7 @@ use MIME::Base64 qw(decode_base64);
 use IO::Uncompress::Gunzip;
 use HTTP::Tiny;
 
-our $VERSION = "0.9.1";
+our $VERSION = "0.91";
 
 =pod
 
