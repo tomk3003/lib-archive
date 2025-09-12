@@ -29,3 +29,7 @@ max_arguments = 6
 allow_import_of = utf8
 [Subroutines::RequireArgUnpacking]
 short_subroutine_statements = 5
+[Subroutines::ProhibitExcessComplexity]
+max_mccabe = 30
+[Modules::ProhibitExcessMainComplexity]
+max_mccabe = 30
