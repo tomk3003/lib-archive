@@ -1,5 +1,6 @@
 # lib-archive
-[![](https://github.com/tomk3003/lib-archive/workflows/perl_tool_team/badge.svg)](https://github.com/tomk3003/lib-archive/actions) 
+
+[![PerlToolsTeam](https://github.com/tomk3003/lib-archive/actions/workflows/perl_tools_team.yml/badge.svg)](https://github.com/tomk3003/lib-archive/actions/workflows/perl_tools_team.yml)
 
 load pure-Perl modules directly from TAR archives
 
