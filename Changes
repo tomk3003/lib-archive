@@ -1,4 +1,4 @@
-0.93 2025-09-12
+0.94 2025-09-12
   - add env var PERL_LIB_ARCHIVE_IGNORE
   - avoid treating running under Devel::Cover as running under a debugger
 

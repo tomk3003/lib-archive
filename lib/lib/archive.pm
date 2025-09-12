@@ -14,7 +14,7 @@ use MIME::Base64 qw(decode_base64);
 use IO::Uncompress::Gunzip;
 use HTTP::Tiny;
 
-our $VERSION = "0.93";
+our $VERSION = "0.94";
 
 =pod
 
@@ -135,8 +135,7 @@ sub import {
     my $under_debugger = defined($DB::single);
     my $extract_dir    = $ENV{PERL_LIB_ARCHIVE_EXTRACT} // "$home/.lib_archive_extract";
     my $ignore         = _get_ignore_sub();
-    my $under_cover    = defined($Devel::Cover::VERSION);
-
+    my $under_cover    = defined($Devel::Cover::VERSION) && !$ENV{PERL_LIB_ARCHIVE_TESTING};
 
     for my $entry (@entries) {
         my $is_url = $entry =~ /$rx_url/;
