@@ -12,10 +12,12 @@ jobs:
     with:
       perl_version: '["5.38"]'
       os: '["ubuntu-latest"]'
-      testing_context: '{"MY_TEST_VAR": "MY_TEST_VALUE"}'
-#
-#  coverage:
-#    uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-coverage.yml@main
+      testing_context: |
+        {
+          "MY_TEST_VAR": "MY_TEST_VALUE"
+        }
+  coverage:
+    uses: tomk3003/github_workflows/.github/workflows/cpan-coverage-perl.yml@use_perl_not_bash
 #
 #  perlcritic:
 #    uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-perlcritic.yml@main
