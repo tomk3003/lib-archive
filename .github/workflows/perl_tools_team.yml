@@ -8,7 +8,7 @@ on:
   pull_request:
 jobs:
   test:
-    uses: tomk3003/github_workflows@use_perl_not_bash/.github/workflows/cpan-test-perl.yml@main
+    uses: tomk3003/github_workflows/.github/workflows/cpan-test-perl.yml@use_perl_not_bash
     with:
       perl_version: '["5.38"]'
       os: '["ubuntu-latest"]'
