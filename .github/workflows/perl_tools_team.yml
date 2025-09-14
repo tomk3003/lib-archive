@@ -17,6 +17,6 @@ jobs:
         }
   coverage:
     uses: tomk3003/github_workflows/.github/workflows/cpan-coverage-perl.yml@use_perl_not_bash
-#
+
 #  perlcritic:
 #    uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-perlcritic.yml@main
