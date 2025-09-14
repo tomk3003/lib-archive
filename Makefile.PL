@@ -14,7 +14,7 @@ WriteMakefile(
   MIN_PERL_VERSION => 5.010001,
   META_MERGE       => {
     resources => {
-      license     => 'http://www.opensource.org/licenses/artistic-license-2.0',
+      license     => 'https://opensource.org/license/artistic-2-0',
       repository  => 'https://github.com/tomk3003/lib-archive',
       bugtracker  => 'https://github.com/tomk3003/lib-archive/issues'
     },
@@ -30,6 +30,5 @@ WriteMakefile(
     IO::Uncompress::Gunzip   0
     HTTP::Tiny               0
   )},
-  TEST_REQUIRES => { 'List::MoreUtils' => 0 },
   test => {TESTS => 't/*.t'}
 );
