@@ -1,3 +1,4 @@
+#!perl
 use 5.010001;
 
 use strict;
@@ -29,5 +30,6 @@ WriteMakefile(
     IO::Uncompress::Gunzip   0
     HTTP::Tiny               0
   )},
+  TEST_REQUIRES => { 'List::MoreUtils' => 0 },
   test => {TESTS => 't/*.t'}
 );
