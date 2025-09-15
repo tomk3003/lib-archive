@@ -8,15 +8,15 @@ on:
   pull_request:
 jobs:
   test:
-    uses: tomk3003/github_workflows/.github/workflows/cpan-test-perl.yml@use_perl_not_bash
+    uses: tomk3003/github_workflows/.github/workflows/cpan-test-env.yml@use_perl_not_bash
     with:
       os: '["ubuntu-latest"]'
-      testing_context: |
+      environment: |
         {
           "MY_TEST_VAR": "MY_TEST_VALUE"
         }
   coverage:
-    uses: tomk3003/github_workflows/.github/workflows/cpan-coverage-perl.yml@use_perl_not_bash
+    uses: tomk3003/github_workflows/.github/workflows/cpan-coverage-env.yml@use_perl_not_bash
 
   perlcritic:
     uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-perlcritic.yml@main
